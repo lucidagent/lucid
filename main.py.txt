@@ -1,0 +1,41 @@
+import os
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command
+import openai
+from dotenv import load_dotenv
+
+load_dotenv()
+bot = Bot(os.getenv("TELEGRAM_TOKEN"))
+dp = Dispatcher()
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+@dp.message(Command("start"))
+async def cmd_start(message: types.Message):
+    await message.answer("Привет! Я — Lucid. Напиши /day чтобы получить задание.")
+
+@dp.message(Command("day"))
+async def cmd_day(message: types.Message):
+    content = """🧠 День 1:
+Вопрос: Что в тебе сейчас требует свободы?
+Практика: Закрой глаза на 5 минут и прислушайся к ощущениям.
+Код дня: «Свобода начинается внутри.»"""
+    await message.answer(content)
+
+@dp.message()
+async def echo(message: types.Message):
+    usr = message.text
+    await message.answer("🔍 Анализ ответа...")
+    resp = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "Ты — эмпатический ИИ-коуч."},
+            {"role": "user", "content": usr}
+        ]
+    )
+    summary = resp.choices[0].message.content
+    await message.answer(summary)
+
+if __name__ == "__main__":
+    import asyncio
+    from aiogram import executor
+    executor.start_polling(dp)
